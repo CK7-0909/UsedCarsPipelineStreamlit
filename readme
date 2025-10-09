@@ -1,0 +1,60 @@
+# ML Pipeline
+
+## Overview
+This repository contains a machine learning pipeline for forecasting used car prices. The workflow ingests listings from Snowflake, engineers features for model training, evaluates an XGBoost regressor, and offers lightweight visualization and testing utilities to validate predictions.
+
+## Directory Layout
+```
+ML_pipeline/
+|-- main.py                # Entry point that wires the pipeline together
+|-- data/
+|   |-- snowflake/         # Snowflake query helpers
+|   |   `-- SF_connection.py
+|   |-- sample_data/       # Example payloads for local testing
+|   |   `-- compass.json
+|   `-- vehicle_specs/     # Curated lookup parquet files (kept <1000 for GitHub)
+|-- models/                # Persisted model artifacts
+|   `-- xgb_model_Jeep_Compass_562.joblib
+|-- src/
+|   |-- config/            # Runtime configuration (move secrets to env vars before sharing)
+|   |   `-- config.py
+|   |-- data_processing/   # Feature engineering utilities
+|   |   `-- preprocessing.py
+|   |-- models/            # Model training scripts
+|   |   `-- XGBoost.py
+|   `-- streamlit/         # Optional visualization helpers
+|       `-- ploty.py
+`-- tests/
+    `-- modelTesting.py    # Smoke tests for the trained model
+```
+
+## Data and Feature Engineering
+1. `data/snowflake/SF_connection.py` retrieves listings from Snowflake (`query_to_df`).
+2. `src/data_processing/preprocessing.py` filters unrealistic prices, computes vehicle age, narrows the dataset to specific models for experimentation, and writes curated lookup parquet files to `data/vehicle_specs/`.
+   - The constant `SUPPORTED_MODEL_PAIRS` limits which manufacturer/model combinations are exported so the repository stays below GitHub’s 1000-file UI cap. Extend this list if you need more models and regenerate the specs.
+
+## Model Training
+- `src/models/XGBoost.py` trains an `XGBRegressor` on engineered features, evaluates MAE/RMSE/R^2, and saves the fitted pipeline to `models/`.
+- Update the output path in `train_model` if you use a different artifact name or location.
+
+## Testing and Validation
+- `tests/modelTesting.py` loads the stored model, aligns one-hot encoded features with the training set, and returns predictions.
+- Run quick checks with sample data via `python -m tests.modelTesting`.
+
+## Visualization
+- `src/streamlit/ploty.py` contains a Plotly scatter helper to compare actual vs. predicted prices inside a Streamlit app.
+- Integrate it by un-commenting the relevant calls in `main.py` or embedding the helper in your Streamlit dashboard.
+
+## Configuration and Secrets
+- `src/config/config.py` reads Snowflake settings from (in order) Streamlit secrets, environment variables, or a local `.env` file.
+- On Streamlit Cloud, add the keys (`SNOWFLAKE_USER`, `SNOWFLAKE_PASSWORD`, `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_WH`, `SNOWFLAKE_DB`, `SNOWFLAKE_SCHEMA`) under **Settings → Secrets** so they are injected at runtime.
+- For local development, export the variables or create a `.env` file (already gitignored) with `KEY=value` lines.
+- Rotate and remove any credential values that were previously committed in plain text before making the repository public.
+
+## Running the Pipeline
+1. Install dependencies (for example, `pip install -r requirements.txt` once available).
+2. Provide Snowflake credentials via environment variables before running the app (`export SNOWFLAKE_USER=...` etc.).
+3. Execute `python main.py` to fetch data, engineer features, and trigger model tests or visualizations as desired.
+
+## Suggested Next Steps
+- Parameterize model filtering logic and hyperparameters to experiment with other vehicle segments.

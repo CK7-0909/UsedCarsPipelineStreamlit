@@ -1,0 +1,22 @@
+[
+  {
+    "year": 2019,
+    "manufacturer": "Volvo",
+    "model": "s60 momentum sedan",
+    "odometer": 18531,
+    "title_status": "clean",
+    "transmission": "other",
+    "paint_color": "black",
+    "state": "al"
+  },
+  {
+    "year": 2017,
+    "manufacturer": "Toyota",
+    "model": "tacoma",
+    "odometer": 39402,
+    "title_status": "clean",
+    "transmission": "automatic",
+    "paint_color": "white",
+    "state": "al"
+  }
+]
